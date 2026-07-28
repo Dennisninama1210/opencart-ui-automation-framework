@@ -3,6 +3,8 @@ package com.qa.opencart.factory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Properties;
 
 import org.apache.logging.log4j.LogManager;
@@ -13,6 +15,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.remote.RemoteWebDriver;
 
 import com.qa.opencart.commonutlis.AppError;
 import com.qa.opencart.exceptions.FrameworkException;
@@ -32,6 +35,7 @@ public class DriverFactory {
 
 		String browser = prop.getProperty("browser");
 		optionsManager = new OptionsManager(prop);
+		boolean remoteExecutions = Boolean.parseBoolean(prop.getProperty("remote"));
 
 		// System.out.println("Browser Name is : " + browser);
 		log.info("Browser Name is : " + browser);
@@ -39,25 +43,36 @@ public class DriverFactory {
 		switch (browser.trim().toLowerCase()) {
 		case "chrome":
 
-			tlDriver.set(new ChromeDriver(optionsManager.getChromeOptions()));
+			if (remoteExecutions) {
+				init_remoteDriver(browser);
+			} else {
+				tlDriver.set(new ChromeDriver(optionsManager.getChromeOptions()));
 
-			// driver = new ChromeDriver();
-
+				// driver = new ChromeDriver();
+			}
 			break;
 
 		case "edge":
 
 			// driver = new EdgeDriver();
 
-			tlDriver.set(new EdgeDriver(optionsManager.getEdgeOptions()));
+			if (remoteExecutions) {
+				init_remoteDriver(browser);
+			} else {
 
+				tlDriver.set(new EdgeDriver(optionsManager.getEdgeOptions()));
+			}
 			break;
 
 		case "firefox":
 
-			// driver = new FirefoxDriver();
-			tlDriver.set(new FirefoxDriver(optionsManager.getFirefoxOptions()));
+			if (remoteExecutions) {
+				init_remoteDriver(browser);
+			} else {
 
+				// driver = new FirefoxDriver();
+				tlDriver.set(new FirefoxDriver(optionsManager.getFirefoxOptions()));
+			}
 			break;
 
 		default:
@@ -77,17 +92,17 @@ public class DriverFactory {
 	public Properties initProp() {
 
 		prop = new Properties();
-		FileInputStream fp =null;
+		FileInputStream fp = null;
 
-		String envName =System.getProperty("env");
+		String envName = System.getProperty("env");
 
 		try {
 			if (envName == null) {
 				log.info("No Env is given hence running the test case on default env :" + envName);
 				fp = new FileInputStream("src/test/resources/config/config.properties");
 			} else {
-			
-			switch (envName.toLowerCase().trim()) {
+
+				switch (envName.toLowerCase().trim()) {
 				case "dev":
 					log.info("Env is given hence running the test case on:" + envName + " env");
 					fp = new FileInputStream("src/test/resources/config/config_dev.properties");
@@ -121,6 +136,43 @@ public class DriverFactory {
 
 	public static WebDriver getDriver() {
 		return tlDriver.get();
+	}
+
+	private void init_remoteDriver(String broswer) {
+		try {
+
+			switch (broswer.trim().toLowerCase()) {
+			case "chrome":
+
+				log.info("Test Cases are Running on Remote WebDriver Chrome");
+
+				tlDriver.set(
+						new RemoteWebDriver(new URL(prop.getProperty("huburl")), optionsManager.getChromeOptions()));
+				break;
+
+			case "firefox":
+
+				log.info("Test Cases are Running on Remote WebDriver Firefox");
+
+				tlDriver.set(
+						new RemoteWebDriver(new URL(prop.getProperty("huburl")), optionsManager.getFirefoxOptions()));
+				break;
+
+			case "edge":
+
+				log.info("Test Cases are Running on Remote WebDriver Edge");
+
+				tlDriver.set(new RemoteWebDriver(new URL(prop.getProperty("huburl")), optionsManager.getEdgeOptions()));
+
+				break;
+
+			default:
+				log.error("Incorrect Browser Name Passed.Please pass correct browser");
+				throw new FrameworkException("===Incorrect Browser====");
+			}
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static File getScreenshotAsFile() {

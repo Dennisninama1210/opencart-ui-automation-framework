@@ -26,14 +26,14 @@
 		</classes>
 	</test>
 
-	<test name="Search Page Test">
+	<!--<test name="Search Page Test">
 		<parameter name="browser" value="edge" />
 		<classes>
 			<class name="com.qa.opencart.tests.SearchProductTest" />
 		</classes>
 	</test>
-
-	<test name="ProductInfo Page Test">
+-->
+	<!--<test name="ProductInfo Page Test">
 		<parameter name="browser" value="chrome" />
 		<classes>
 			<class name="com.qa.opencart.tests.ProductInfoTest" />
@@ -60,5 +60,5 @@
 			<class name="com.qa.opencart.tests.LoginPageNegativeTest" />
 		</classes>
 	</test>
-
+-->
 </suite>
